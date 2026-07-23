@@ -12,7 +12,12 @@
        padding:8px 14px;border-radius:6px;box-shadow:0 1px 6px rgba(0,0,0,.3);font-size:15px;font-weight:700}
   .legend{background:rgba(255,255,255,.95);padding:10px 12px;border-radius:6px;
           box-shadow:0 1px 6px rgba(0,0,0,.3);font-size:13px;line-height:1.7}
+  .legend{max-height:80vh;overflow-y:auto;max-width:280px}
   .legend i{display:inline-block;width:14px;height:14px;border-radius:50%;margin-right:7px;vertical-align:-2px}
+  .legend .dh{font-weight:700;margin:8px 0 3px}
+  .legend .st{font-size:12px;line-height:1.5;padding-left:21px;color:#333}
+  .legend .st b{display:inline-block;width:15px;height:15px;border-radius:50%;color:#fff;
+                font-size:10px;text-align:center;line-height:15px;margin-right:4px}
   .num{background:transparent;border:none}
   .num div{width:26px;height:26px;border-radius:50%;color:#fff;font-weight:700;font-size:13px;
            display:flex;align-items:center;justify-content:center;border:2px solid #fff;
@@ -106,9 +111,17 @@ L.control.layers({"Google 地圖":gRoad,"Google 衛星":gSat}, overlays,
 const lg = L.control({position:'bottomleft'});
 lg.onAdd = function(){
   const d = L.DomUtil.create('div','legend');
-  d.innerHTML = '<b>圖例</b><br>' + DAYS.map(x=>
-    `<i style="background:${x.color}"></i>${x.name}`).join('<br>') +
-    '<br><span style="color:#666;font-size:12px">點選圓圈看停留時間與說明<br>右上角可勾選顯示／隱藏各天</span>';
+  L.DomEvent.disableScrollPropagation(d);
+  let html = '<b>行程停靠點一覽</b>';
+  DAYS.forEach(x=>{
+    html += `<div class="dh"><i style="background:${x.color}"></i>${x.name}</div>`;
+    x.pts.forEach((p,i)=>{
+      html += `<div class="st"><b style="background:${x.color}">${i+1}</b>${p[0]}</div>`;
+    });
+  });
+  html += '<div style="color:#666;font-size:11px;margin-top:8px">'+
+          '點圓圈看停留時間；右上可切各天顯示</div>';
+  d.innerHTML = html;
   return d;
 };
 lg.addTo(map);
