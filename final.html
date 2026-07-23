@@ -22,11 +22,13 @@
                    text-align:center;line-height:16px;font-weight:700}
   .legend .st .nm{flex:1}
   .legend .st .tm{color:#c0392b;font-weight:700;white-space:nowrap;margin-left:4px}
+  .legend .meal{font-size:12px;color:#888;padding-left:23px;margin:1px 0;font-style:italic}
   .legend .mv{font-size:11px;color:#777;padding-left:23px;margin:1px 0}
   .sh-circle{border-radius:50%}
   .sh-square{border-radius:2px}
   .sh-diamond{border-radius:2px;transform:rotate(45deg)}
   .sh-diamond span{display:inline-block;transform:rotate(-45deg)}
+  .sh-gate{border-radius:50%;border:2px dashed #fff !important}
   .mk{background:transparent;border:none}
   .mk .box{width:26px;height:26px;color:#fff;font-weight:700;font-size:12px;
            display:flex;align-items:center;justify-content:center;border:2px solid #fff;
@@ -39,58 +41,57 @@
 </style>
 </head>
 <body>
-<div class="hdr">新馬5日　環球影城＋夜間動物園版（捨麻六甲、保大紅花）</div>
+<div class="hdr">新馬5日　環球影城＋夜間動物園版（餐食只留時段、由旅行社安排）</div>
 <div id="map"></div>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
-// type: sight=景點(圓) meal=用餐(方) hotel=住宿(菱)
-// [名稱, lat, lng, 時間, 移動說明, type]
+// [名稱, lat, lng, 時間, 移動說明, type, 餐註]
+// type: sight=景點(圓) hotel=住宿(菱) gate=關卡(虛線圓) meal=用餐(不上圖,只留時段)
 const DAYS = [
- { name:"第1天 桃園→吉隆坡→黑風洞→Outlet→雲頂", color:"#e6194b", pts:[
-   ["吉隆坡國際機場 KLIA T1",2.75427,101.70466,"11:45抵達／出關","機上早餐","sight"],
-   ["午餐 機場周邊中式合菜",3.2100,101.6900,"13:15-14:15","出關上車→車程約60分","meal"],
-   ["黑風洞 Batu Caves",3.2373027,101.6836039,"14:15-15:55","餐後步行即到","sight"],
-   ["雲頂 Premium Outlets（Awana）",3.4033765,101.7831159,"16:45-18:15","車程約50分","sight"],
-   ["雲頂 SkyAvenue／飯店",3.4239007,101.7938018,"19:00入住","纜車約15分","hotel"],
-   ["晚餐 雲頂飯店自助",3.4252,101.7948,"19:30-21:00","飯店內","meal"],
+ { name:"第1天 桃園→吉隆坡→Outlet→雲頂", color:"#e6194b", pts:[
+   ["吉隆坡國際機場 KLIA T1",2.75427,101.70466,"11:45抵達／出關","機上早餐","sight",""],
+   ["午餐（時段，餐廳由旅行社安排）",0,0,"13:15-14:15","","meal","不指定地點"],
+   ["雲頂 Premium Outlets（Awana）",3.4033765,101.7831159,"15:45-17:00","車程約90分","sight",""],
+   ["雲頂 SkyAvenue／飯店",3.4239007,101.7938018,"17:20入住","纜車約15分","hotel",""],
+   ["晚餐（時段，飯店自助）",0,0,"18:00-19:30","","meal","飯店內"],
  ]},
  { name:"第2天 雲頂→清水岩廟→吉隆坡市區", color:"#f58231", pts:[
-   ["雲頂 SkyAvenue／飯店（起點）",3.4239007,101.7938018,"早餐07:00-08:00→08:30出發","—","hotel"],
-   ["清水岩廟 Chin Swee Caves Temple",3.4125879,101.7881491,"09:00-09:40","下山車程約20分","sight"],
-   ["雙峰塔 KLCC",3.1574693,101.7115639,"11:00-12:00","車程約60分","sight"],
-   ["午餐 吉隆坡肉骨茶",3.1455,101.7000,"12:00-13:00","車程約15分","meal"],
-   ["茨廠街 Petaling Street",3.1425319,101.6982998,"13:30起｜步行圈","車程約10分","sight"],
-   ["鬼仔巷 Kwai Chai Hong",3.1414715,101.6976131,"步行","步行3分","sight"],
-   ["REX KL 復古迷宮書店",3.1449093,101.6984824,"步行","步行5分","sight"],
-   ["默迪卡118 Merdeka 118",3.1418445,101.7006433,"步行","步行8分","sight"],
-   ["獨立廣場 Dataran Merdeka",3.1490605,101.6936592,"步行","步行10分","sight"],
-   ["生命之河 River of Life",3.1471198,101.6952148,"步行","步行5分","sight"],
-   ["晚餐 亞羅街夜市",3.146121,101.7092762,"18:15-20:15","車程約10分","meal"],
-   ["金普頓 Kimpton Naluria TRX",3.1424073,101.7168132,"住宿","車程約10分","hotel"],
+   ["雲頂 SkyAvenue／飯店（起點）",3.4239007,101.7938018,"早餐07:00-08:00→08:30出發","—","hotel",""],
+   ["清水岩廟 Chin Swee Caves Temple",3.4125879,101.7881491,"09:00-09:40","下山車程約20分","sight",""],
+   ["雙峰塔 KLCC",3.1574693,101.7115639,"11:00-12:00","車程約60分","sight",""],
+   ["午餐（時段，餐廳由旅行社安排）",0,0,"12:00-13:00","","meal","不指定地點"],
+   ["茨廠街 Petaling Street",3.1425319,101.6982998,"13:30起｜步行圈","車程約15分","sight",""],
+   ["鬼仔巷 Kwai Chai Hong",3.1414715,101.6976131,"步行","步行3分","sight",""],
+   ["REX KL 復古迷宮書店",3.1449093,101.6984824,"步行","步行5分","sight",""],
+   ["默迪卡118 Merdeka 118",3.1418445,101.7006433,"步行","步行8分","sight",""],
+   ["獨立廣場 Dataran Merdeka",3.1490605,101.6936592,"步行","步行10分","sight",""],
+   ["生命之河 River of Life",3.1471198,101.6952148,"步行","步行5分","sight",""],
+   ["亞羅街夜市（晚餐在此）",3.146121,101.7092762,"18:15-20:15","車程約10分","sight","夜市小吃"],
+   ["金普頓 Kimpton Naluria TRX",3.1424073,101.7168132,"住宿","車程約10分","hotel",""],
  ]},
- { name:"第3天 吉隆坡→布城→大紅花（渡假村日）", color:"#3cb44b", pts:[
-   ["金普頓 TRX（起點）",3.1424073,101.7168132,"早餐07:00-08:00→09:30出發","—","hotel"],
-   ["布城 粉紅清真寺",2.9360702,101.689213,"10:30-12:00","車程約40分","sight"],
-   ["午餐 布城／南下途中",2.9000,101.7050,"12:00-13:00","車程約15分","meal"],
-   ["大紅花 Lexis Hibiscus Port Dickson",2.4184919,101.8738791,"15:00入住｜泳池海灘","車程約100分","hotel"],
-   ["晚餐 渡假村",2.4196,101.8746,"19:00-21:00","渡假村內","meal"],
+ { name:"第3天 吉隆坡→天后宮→布城→大紅花", color:"#3cb44b", pts:[
+   ["金普頓 TRX（起點）",3.1424073,101.7168132,"早餐07:00-08:00→08:30出發","—","hotel",""],
+   ["天后宮 Thean Hou Temple",3.1219525,101.6876678,"09:00-09:45","車程約20分","sight",""],
+   ["布城 粉紅清真寺＋遊湖",2.9360702,101.689213,"10:30-12:30","車程約40分","sight",""],
+   ["午餐（時段，餐廳由旅行社安排）",0,0,"12:30-13:30","","meal","不指定地點"],
+   ["大紅花 Lexis Hibiscus Port Dickson",2.4184919,101.8738791,"16:00入住｜午後泳池海灘","車程約120分","hotel",""],
+   ["晚餐（時段，渡假村）",0,0,"18:00-19:30","","meal","渡假村內"],
  ]},
  { name:"第4天 大紅花→環球影城→夜間動物園", color:"#911eb4", pts:[
-   ["大紅花（起點）",2.4184919,101.8738791,"早餐07:00-08:00→08:00退房","—","hotel"],
-   ["馬新第二通道 Tuas Second Link",1.4712343,103.6083531,"10:30-12:00通關","車程約150分","sight"],
-   ["午餐 聖淘沙／影城入口",1.2560,103.8215,"12:45-13:45","車程約50分","meal"],
-   ["環球影城 USS（聖淘沙）",1.2540421,103.8238084,"13:45-17:15｜約3.5小時","步行即到","sight"],
-   ["晚餐 萬禮周邊",1.4040,103.7895,"18:15-19:15","車程約60分","meal"],
-   ["夜間動物園 Night Safari",1.4021872,103.7880606,"19:15-21:30｜含遊園車","步行即到","sight"],
-   ["新加坡市區飯店",1.2900,103.8550,"22:15入住","車程約45分","hotel"],
+   ["大紅花（起點）",2.4184919,101.8738791,"早餐07:00-08:00→08:00退房","—","hotel",""],
+   ["馬新關卡 Tuas（下車通關查驗）",1.4712343,103.6083531,"10:30-12:00｜非景點，馬出境＋星入境","車程約150分","gate",""],
+   ["午餐（時段，餐廳由旅行社安排）",0,0,"12:45-13:45","","meal","不指定地點"],
+   ["環球影城 USS（聖淘沙）",1.2540421,103.8238084,"13:45-17:15｜約3.5小時","車程約50分","sight",""],
+   ["夜間動物園 Night Safari",1.4021872,103.7880606,"19:15-21:00｜18:15到萬禮，晚餐自理+等候入園","車程約60分","sight","晚餐自理"],
+   ["新加坡飯店（建議北部近萬禮）",1.3300,103.8400,"21:45入住","車程約45分","hotel",""],
  ]},
  { name:"第5天 新加坡市區→桃園（15:45班機）", color:"#0082c8", pts:[
-   ["新加坡飯店（起點）",1.2900,103.8550,"早餐07:30-08:30→出發","—","hotel"],
-   ["魚尾獅公園 Merlion Park",1.2867449,103.8543872,"08:30-09:30","車程約10分","sight"],
-   ["濱海灣金沙 Marina Bay Sands",1.2837575,103.8591065,"09:30-10:30","步行約15分","sight"],
-   ["星耀樟宜 Jewel",1.3602078,103.9894605,"11:15-12:15","車程約30分","sight"],
-   ["午餐 星耀樟宜／機場",1.3610,103.9902,"12:15前","機場內","meal"],
-   ["樟宜機場｜15:45起飛",1.3644202,103.9915308,"12:30報到","步行","hotel"],
+   ["新加坡飯店（起點）",1.3300,103.8400,"早餐07:30-08:30→出發","—","hotel",""],
+   ["魚尾獅公園 Merlion Park",1.2867449,103.8543872,"08:30-09:30","車程約20分","sight",""],
+   ["濱海灣金沙 Marina Bay Sands",1.2837575,103.8591065,"09:30-10:30","步行約15分","sight",""],
+   ["星耀樟宜 Jewel",1.3602078,103.9894605,"11:15-12:15","車程約30分","sight",""],
+   ["午餐（時段，星耀樟宜／機場）",0,0,"12:15前","","meal","機場內"],
+   ["樟宜機場｜15:45起飛",1.3644202,103.9915308,"12:30報到","步行","hotel",""],
  ]},
 ];
 
@@ -100,28 +101,30 @@ const gRoad = L.tileLayer('https://{s}.google.com/vt/lyrs=m&hl=zh-TW&x={x}&y={y}
 const gSat = L.tileLayer('https://{s}.google.com/vt/lyrs=y&hl=zh-TW&x={x}&y={y}&z={z}',
   {maxZoom:20, subdomains:['mt0','mt1','mt2','mt3'], attribution:'&copy; Google'});
 
-const shapeClass = {sight:'sh-circle', meal:'sh-square', hotel:'sh-diamond'};
+const shapeClass = {sight:'sh-circle', hotel:'sh-diamond', gate:'sh-gate'};
 const overlays = {};
 const all = [];
 
 DAYS.forEach(day=>{
   const g = L.layerGroup();
   const line = [];
-  day.pts.forEach((p,i)=>{
+  let n = 0;
+  day.pts.forEach(p=>{
     const [nm,lat,lng,time,move,type] = p;
-    line.push([lat,lng]);
-    all.push([lat,lng]);
+    if(type==='meal') return;           // 用餐不上圖
+    n++;
+    line.push([lat,lng]); all.push([lat,lng]);
     const sc = shapeClass[type];
-    const inner = (type==='hotel') ? `<span>${i+1}</span>` : (i+1);
+    const inner = (type==='hotel') ? `<span>${n}</span>` : n;
     L.marker([lat,lng],{icon:L.divIcon({className:'mk',
       html:`<div class="box ${sc}" style="background:${day.color}">${inner}</div>`,
       iconSize:[26,26], iconAnchor:[13,13], popupAnchor:[0,-14]})})
-     .bindPopup(`<b>${day.name.split(' ')[0]}-${i+1}　${nm}</b><br>
+     .bindPopup(`<b>${day.name.split(' ')[0]}-${n}　${nm}</b><br>
                  <span class="d">🕒 ${time}</span><br>
-                 <span class="d">🚌 ${move}</span><br>
+                 ${move&&move!=='—'?`<span class="d">🚌 ${move}</span><br>`:''}
                  <span class="d">${lat.toFixed(5)}, ${lng.toFixed(5)}</span><br>
                  <a href="https://www.google.com/maps?q=${lat},${lng}" target="_blank">Google Maps 開啟</a>`)
-     .bindTooltip(`${i+1}. ${nm}`,{direction:'right',offset:[14,0]})
+     .bindTooltip(`${n}. ${nm}`,{direction:'right',offset:[14,0]})
      .addTo(g);
   });
   L.polyline(line,{color:day.color,weight:3,opacity:.7,dashArray:'6,6'}).addTo(g);
@@ -140,21 +143,28 @@ lg.onAdd = function(){
   L.DomEvent.disableClickPropagation(d);
   let h = '<b>行程時刻表</b>';
   h += '<div class="key"><b style="color:#555">●</b>景點　'+
-       '<b style="color:#555">■</b>用餐　'+
-       '<b style="color:#555">◆</b>住宿／機場</div>';
+       '<b style="color:#555">◆</b>住宿／機場　'+
+       '<b style="color:#555">◌</b>關卡　'+
+       '<span style="color:#888;font-style:italic">🍴用餐時段</span></div>';
   DAYS.forEach(day=>{
     h += `<div class="dh"><i style="background:${day.color}"></i>${day.name}</div>`;
-    day.pts.forEach((p,i)=>{
-      const [nm,lat,lng,time,move,type] = p;
+    let n=0;
+    day.pts.forEach(p=>{
+      const [nm,lat,lng,time,move,type,note] = p;
+      if(type==='meal'){
+        h += `<div class="meal">🍴 ${nm.replace(/（.*?）/,'')} ${time}${note?'（'+note+'）':''}</div>`;
+        return;
+      }
       if(move && move!=='—') h += `<div class="mv">🚌 ${move}</div>`;
+      n++;
       const sc = shapeClass[type];
-      const inner = (type==='hotel') ? `<span>${i+1}</span>` : (i+1);
+      const inner = (type==='hotel') ? `<span>${n}</span>` : n;
       h += `<div class="st"><span class="sh ${sc}" style="background:${day.color}">${inner}</span>`+
-           `<span class="nm">${nm}</span><span class="tm">${time}</span></div>`;
+           `<span class="nm">${nm}</span><span class="tm">${time.split('｜')[0]}</span></div>`;
     });
   });
   h += '<div style="color:#666;font-size:11px;margin-top:8px">'+
-       '時間為估算；點地圖圖示看詳情，右上可切各天</div>';
+       '餐食只留時段、地點由旅行社安排；點地圖圖示看詳情</div>';
   d.innerHTML = h;
   return d;
 };
