@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>新馬5日行程地圖（建議調整版）｜台灣整合防災工程顧問</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<style>
+  html,body{margin:0;padding:0;height:100%;font-family:"Microsoft JhengHei","微軟正黑體",system-ui,sans-serif}
+  #map{position:absolute;top:0;bottom:0;left:0;right:0}
+  .hdr{position:absolute;z-index:1000;top:10px;left:50px;background:rgba(255,255,255,.95);
+       padding:8px 14px;border-radius:6px;box-shadow:0 1px 6px rgba(0,0,0,.3);font-size:15px;font-weight:700}
+  .legend{background:rgba(255,255,255,.95);padding:10px 12px;border-radius:6px;
+          box-shadow:0 1px 6px rgba(0,0,0,.3);font-size:13px;line-height:1.7}
+  .legend i{display:inline-block;width:14px;height:14px;border-radius:50%;margin-right:7px;vertical-align:-2px}
+  .num{background:transparent;border:none}
+  .num div{width:26px;height:26px;border-radius:50%;color:#fff;font-weight:700;font-size:13px;
+           display:flex;align-items:center;justify-content:center;border:2px solid #fff;
+           box-shadow:0 1px 4px rgba(0,0,0,.5)}
+  .leaflet-popup-content{font-size:14px;line-height:1.6;margin:10px 12px}
+  .leaflet-popup-content b{font-size:15px}
+  .leaflet-popup-content .d{color:#666;font-size:12px}
+  @media(max-width:600px){.hdr{font-size:13px;left:50px;right:10px}.legend{font-size:12px}}
+</style>
+</head>
+<body>
+<div class="hdr">新馬5日行程地圖　建議調整版（一路向南、無回頭路）</div>
+<div id="map"></div>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+const DAYS = [
+  { name:"第1天 桃園→吉隆坡→黑風洞→雲頂", color:"#e6194b", pts:[
+    ["吉隆坡國際機場 KLIA T1", 2.75427, 101.70466, "11:45抵達／13:30上車"],
+    ["黑風洞 Batu Caves", 3.2373027, 101.6836039, "15:30-16:20｜272階彩虹階梯"],
+    ["清水岩廟 Chin Swee Caves Temple", 3.4125879, 101.7881491, "17:25-18:05｜萬佛塔、雲海展望"],
+    ["雲頂 SkyAvenue／飯店", 3.4239007, 101.7938018, "18:35入住｜Genting Grand 或 RW Hotel"]
+  ]},
+  { name:"第2天 雲頂→吉隆坡市區（住吉隆坡）", color:"#f58231", pts:[
+    ["雲頂 SkyAvenue（起點）", 3.4239007, 101.7938018, "08:30出發，下山進吉隆坡"],
+    ["雙峰塔 KLCC", 3.1574693, 101.7115639, "10:00-11:30｜外觀、KLCC公園、Suria"],
+    ["茨廠街 Petaling Street", 3.1425319, 101.6982998, "13:00起｜以下六點步行圈"],
+    ["鬼仔巷 Kwai Chai Hong", 3.1414715, 101.6976131, "彩繪巷弄"],
+    ["REX KL 復古迷宮書店", 3.1449093, 101.6984824, "BookXcess 書海迷宮"],
+    ["默迪卡118 Merdeka 118", 3.1418445, 101.7006433, "世界第二高樓"],
+    ["獨立廣場 Dataran Merdeka", 3.1490605, 101.6936592, "蘇丹阿都沙末大廈"],
+    ["生命之河 River of Life", 3.1471198, 101.6952148, "河川整治案例｜夜間燈光"],
+    ["亞羅街 Jalan Alor", 3.146121, 101.7092762, "18:15-20:15晚餐｜燒雞翼、沙嗲、魔鬼魚"],
+    ["金普頓 Kimpton Naluria TRX", 3.1424073, 101.7168132, "住宿｜2026/1/12開幕，466間房"]
+  ]},
+  { name:"第3天 吉隆坡→布城→大紅花（住渡假村）", color:"#3cb44b", pts:[
+    ["金普頓 TRX（起點）", 3.1424073, 101.7168132, "上午出發，一路向南"],
+    ["布城 粉紅清真寺", 2.9360702, 101.689213, "上午｜避開12:30-14:00禮拜時段"],
+    ["大紅花 Lexis Hibiscus Port Dickson", 2.4184919, 101.8738791, "午後入住｜海上花瓣別墅，整個下午+傍晚玩渡假村"]
+  ]},
+  { name:"第4天 大紅花→麻六甲→新加坡", color:"#911eb4", pts:[
+    ["大紅花（起點）", 2.4184919, 101.8738791, "上午渡假村自由活動後出發，波德申在往麻六甲路上"],
+    ["麻六甲 荷蘭紅屋 Stadthuys", 2.1940808, 102.2491414, "10:30-12:00｜基督堂、大鐘樓、聖保羅教堂"],
+    ["雞場街 Jonker Street", 2.1948293, 102.2483685, "13:00-14:00｜古董街、麻六甲河遊船"],
+    ["馬新第二通道 Tuas Second Link", 1.4712343, 103.6083531, "17:00-18:30通關｜傍晚為尖峰"],
+    ["濱海灣金沙 Marina Bay Sands", 1.2837575, 103.8591065, "20:15｜螺旋橋、精品名店"],
+    ["濱海灣花園 Gardens by the Bay", 1.2815683, 103.8636132, "超級樹燈光秀 19:45／20:45"]
+  ]},
+  { name:"第5天 新加坡→桃園", color:"#0082c8", pts:[
+    ["魚尾獅公園 Merlion Park", 1.2867449, 103.8543872, "08:30-10:00"],
+    ["濱海藝術中心 Esplanade", 1.2897934, 103.8558166, "步行串連｜國會大廈、舊高等法院"],
+    ["濱海堤壩 Marina Barrage", 1.2805168, 103.8714399, "10:20-11:20｜防洪蓄水工程，免費"],
+    ["星耀樟宜 Jewel", 1.3602078, 103.9894605, "12:00-13:30｜40公尺室內瀑布"]
+  ]}
+];
+
+const map = L.map('map');
+const gRoad = L.tileLayer('https://{s}.google.com/vt/lyrs=m&hl=zh-TW&x={x}&y={y}&z={z}',
+  {maxZoom:20, subdomains:['mt0','mt1','mt2','mt3'], attribution:'&copy; Google'}).addTo(map);
+const gSat = L.tileLayer('https://{s}.google.com/vt/lyrs=y&hl=zh-TW&x={x}&y={y}&z={z}',
+  {maxZoom:20, subdomains:['mt0','mt1','mt2','mt3'], attribution:'&copy; Google'});
+
+const overlays = {};
+const all = [];
+
+DAYS.forEach(day=>{
+  const g = L.layerGroup();
+  const line = [];
+  day.pts.forEach((p,i)=>{
+    const [nm,lat,lng,note] = p;
+    line.push([lat,lng]);
+    all.push([lat,lng]);
+    L.marker([lat,lng],{icon:L.divIcon({className:'num',
+      html:`<div style="background:${day.color}">${i+1}</div>`,
+      iconSize:[26,26], iconAnchor:[13,13], popupAnchor:[0,-14]})})
+     .bindPopup(`<b>${day.name.split(' ')[0]}-${i+1}　${nm}</b><br>
+                 <span class="d">${note}</span><br>
+                 <span class="d">${lat.toFixed(5)}, ${lng.toFixed(5)}</span><br>
+                 <a href="https://www.google.com/maps?q=${lat},${lng}" target="_blank">在 Google Maps 開啟</a>`)
+     .bindTooltip(`${i+1}. ${nm}`,{direction:'right',offset:[14,0]})
+     .addTo(g);
+  });
+  L.polyline(line,{color:day.color,weight:3,opacity:.75,dashArray:'6,6'}).addTo(g);
+  g.addTo(map);
+  overlays[`<span style="color:${day.color};font-weight:700">■</span> ${day.name}`] = g;
+});
+
+map.fitBounds(all,{padding:[40,40]});
+L.control.layers({"Google 地圖":gRoad,"Google 衛星":gSat}, overlays,
+  {collapsed:false, position:'topright'}).addTo(map);
+
+const lg = L.control({position:'bottomleft'});
+lg.onAdd = function(){
+  const d = L.DomUtil.create('div','legend');
+  d.innerHTML = '<b>圖例</b><br>' + DAYS.map(x=>
+    `<i style="background:${x.color}"></i>${x.name}`).join('<br>') +
+    '<br><span style="color:#666;font-size:12px">點選圓圈看停留時間與說明<br>右上角可勾選顯示／隱藏各天</span>';
+  return d;
+};
+lg.addTo(map);
+</script>
+</body>
+</html>
